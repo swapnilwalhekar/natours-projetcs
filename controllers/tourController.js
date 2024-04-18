@@ -29,7 +29,51 @@ const checkBody = (req, res, next) => {
 
 const getAllTours = async (req, res) => {
   try {
-    const allTours = await Tour.find({});
+    // BUILD QUERY
+    // 1A) API filtering
+    const queryObj = { ...req.query };
+    const excludedFields = ['page', 'sort', 'limit'];
+    excludedFields.forEach((el) => delete queryObj[el]);
+
+    // 1B) Adavance API filtering
+    let queryStr = JSON.stringify(queryObj);
+    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
+    const advQueryObj = JSON.parse(queryStr);
+
+    // const query = Tour.find(queryObj);
+    let query = Tour.find(advQueryObj);
+
+    // 2) Sorting
+    if (req.query.sort) {
+      const sortBy = req.query.sort; // when pass single arguments for sort
+      // const sortBy = req.query.sort.split(',').join(' '); // when pass two arguments for sort
+      query = query.sort(sortBy);
+    } else {
+      query = query.sort('-createdAt');
+    }
+
+    // 3) Field limiting
+    // if (req.query.fields) {
+    //   const fields = req.query.fields.split(',').join(' ');
+    //   query = query.select(fields);
+    // } else {
+    //   query = query.select('__v');
+    // }
+
+    // 4) Pagination
+
+    const limit = req.query.limit;
+    const page = req.query.page;
+    const skip = 1;
+
+    // EXICUTE QUERY
+    const allTours = await query;
+
+    // let query = Tour.find()
+    //   .where('duration')
+    //   .equals(5)
+    //   .where('difficulty')
+    //   .equals('easy');
 
     res.status(200).json({
       status: 'success',
