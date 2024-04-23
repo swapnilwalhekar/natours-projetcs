@@ -1,9 +1,5 @@
-const fs = require('fs');
 const Tour = require('./../models/tourModel');
-
-// const tours = JSON.parse(
-//   fs.readFileSync(`${__dirname}/../dev-data/data/tours-simple.json`)
-// );
+const APIFeatures = require('./../utils/apiFeatures')
 
 const checkID = (req, res, next, val) => {
   console.log('ok Tour id is:', val);
@@ -27,53 +23,17 @@ const checkBody = (req, res, next) => {
   next();
 };
 
+// get top 5 cheap tours
+const aliasTopTours = (req, res, next) => {
+  req.query.limit = '5';
+  req.query.sort = '-ratingsAverage,price';
+  next();
+}
+
 const getAllTours = async (req, res) => {
   try {
-    // BUILD QUERY
-    // 1A) API filtering
-    const queryObj = { ...req.query };
-    const excludedFields = ['page', 'sort', 'limit'];
-    excludedFields.forEach((el) => delete queryObj[el]);
-
-    // 1B) Adavance API filtering
-    let queryStr = JSON.stringify(queryObj);
-    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
-    const advQueryObj = JSON.parse(queryStr);
-
-    // const query = Tour.find(queryObj);
-    let query = Tour.find(advQueryObj);
-
-    // 2) Sorting
-    if (req.query.sort) {
-      const sortBy = req.query.sort; // when pass single arguments for sort
-      // const sortBy = req.query.sort.split(',').join(' '); // when pass two arguments for sort
-      query = query.sort(sortBy);
-    } else {
-      query = query.sort('-createdAt');
-    }
-
-    // 3) Field limiting
-    // if (req.query.fields) {
-    //   const fields = req.query.fields.split(',').join(' ');
-    //   query = query.select(fields);
-    // } else {
-    //   query = query.select('__v');
-    // }
-
-    // 4) Pagination
-
-    const limit = req.query.limit;
-    const page = req.query.page;
-    const skip = 1;
-
-    // EXICUTE QUERY
-    const allTours = await query;
-
-    // let query = Tour.find()
-    //   .where('duration')
-    //   .equals(5)
-    //   .where('difficulty')
-    //   .equals('easy');
+    const features = new APIFeatures(Tour.find(), req.query).filter().sort().paginate();
+    const allTours = await features.query;
 
     res.status(200).json({
       status: 'success',
@@ -83,7 +43,7 @@ const getAllTours = async (req, res) => {
     });
   } catch (error) {
     res.status(404).json({
-      staus: 'failed',
+      status: 'failed',
       message: error,
     });
   }
@@ -101,7 +61,7 @@ const addTour = async (req, res) => {
     res.status(200).json({
       staus: 'success',
       message: 'New tour added successfully',
-      datat: newTour,
+      data: newTour,
     });
   } catch (error) {
     res.status(400).json({
@@ -164,13 +124,13 @@ const deleteTour = async (req, res) => {
 
     selectedTour.length > 0
       ? res.status(200).json({
-          staus: 'success',
-          message: 'Tour deleted successfully',
-        })
+        staus: 'success',
+        message: 'Tour deleted successfully',
+      })
       : res.status(400).json({
-          staus: 'failed',
-          message: 'Tour id not exit, Please provide valid tour id',
-        });
+        staus: 'failed',
+        message: 'Tour id not exit, Please provide valid tour id',
+      });
   } catch (error) {
     res.status(400).json({
       staus: 'failed',
@@ -185,4 +145,5 @@ module.exports = {
   addTour,
   updateTour,
   deleteTour,
+  aliasTopTours
 };
