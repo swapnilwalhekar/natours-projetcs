@@ -139,11 +139,110 @@ const deleteTour = async (req, res) => {
   }
 };
 
+/*------------ aggregation-pipeline --------------*/
+
+const getTourStats = async (req, res, next) => {
+  try {
+    const stats = await Tour.aggregate([
+      {
+        $match: { ratingsAverage: { $gte: 4.5 } }
+      },
+      {
+        $group: {
+          // _id: null,
+          _id: { $toUpper: '$difficulty' },
+          numTours: { $sum: 1 },
+          numRatings: { $sum: '$ratingsQuantity' },
+          avgRating: { $avg: '$ratingsAverage' },
+          avgPrice: { $avg: '$price' },
+          minPrice: { $min: '$price' },
+          maxPrice: { $max: '$price' }
+        }
+      },
+      {
+        $sort: { avgPrice: 1 }
+      },
+      // {
+      //   $match: { _id : {$ne : "HARD"} }
+      // }
+    ]);
+
+    res.status(200).json({
+      status: "success",
+      data: { stats }
+    })
+  } catch (error) {
+    res.status(404).json({
+      status: "failed",
+      message: error
+    })
+  }
+}
+
+const getMonthlyPlan = async (req, res, next) => {
+  try {
+    const year = req.params.year * 1;  //2021
+
+    const plan = await Tour.aggregate([
+      {
+        $unwind: '$startDates'      // seprate the entries when startDates having multiple array elements
+      },
+      {
+        $match: {
+          startDates: {
+            $gte: new Date(`${year}-01-01`),
+            $lte: new Date(`${year}-12-31`)
+          }
+        }
+      },
+      {
+        $group: {
+          _id: { $month: '$startDates' },
+          numTourStarts: { $sum: 1 },
+          tours: { $push: '$name' }
+        }
+      },
+      {
+        $addFields: {
+          month: '$_id'        // add month field
+        }
+      },
+      {
+        $project: {
+          _id: 0           // 0 for all fields without _id, 1 for only _id
+        }
+      },
+      {
+        $sort: {
+          numTourStarts: 1   // 1 for ascending, -1 for decsending
+        }
+      },
+      // {
+      //   $limit : 2       
+      // }
+    ]);
+
+    res.status(200).json({
+      status: "success",
+      count: plan.length,
+      data: { plan }
+    })
+
+  } catch (error) {
+    res.status(404).json({
+      status: "failed",
+      message: error
+    })
+  }
+}
+
 module.exports = {
   getAllTours,
   getSelectedTour,
   addTour,
   updateTour,
   deleteTour,
-  aliasTopTours
+  aliasTopTours,
+  getTourStats,
+  getMonthlyPlan
 };
