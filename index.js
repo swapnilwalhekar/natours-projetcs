@@ -21,7 +21,7 @@ app.use('/sw/v1/users', userRouter);
 // 2) ROUTES HANDLER
 
 // 3) ROUTES
-// ======================== option-1 ========================
+// ======================== option-1 =======================
 // app.get('/sw/v1/tours', getAllTours); // get all tours information
 // app.get('/sw/v1/tours/:id', getSelectedTour); // get selected tour information
 // app.post('/sw/v1/tours', addTour); // add tour

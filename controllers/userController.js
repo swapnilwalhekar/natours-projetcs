@@ -18,13 +18,13 @@ const getUser = (req, res) => {
 
 const updateUser = (req, res) => {
   res.status(200).json({
-    message: 'getUser ROUTE IS NOT CREATED',
+    message: 'updateUser ROUTE IS NOT CREATED',
   });
 };
 
 const deleteUser = (req, res) => {
   res.status(200).json({
-    message: 'getUser ROUTE IS NOT CREATED',
+    message: 'deleteUser ROUTE IS NOT CREATED',
   });
 };
 
