@@ -4,15 +4,19 @@ const handleCastErrorDB = (err) => {
   return new AppError(`Invalid ${err.path}: ${err.value}`, 400);
 }
 
-const handleDuplicateFieldsDB = (err, errmsg) => {
-  return new AppError(`Invalid ${errmsg}`, 400);
+const handleDuplicateFieldsDB = () => {
+  return new AppError(`Duplicate key error collection: Please try with new one`, 400);
+}
+
+const handleValidationError = (err) => {
+  return new AppError(`${err}`, 200);
 }
 
 const sendErrorDev = (err, res) => {
   res.status(err.statusCode).json({
     status: err.status,
-    message: err.message,
     err: err,
+    message: err.message,
     stack: err.stack
   })
 }
@@ -43,23 +47,18 @@ const globalErrorHandler = (err, req, res, next) => {
   err.status = err.status || "error";
 
   if (process.env.NODE_ENV == "development") {
-    let error = { ...err };
-    
-    // if (error.code === 11000) {
-    //   error = handleDuplicateFieldsDB(error, err.message);
-    // }
-    
-    if (error.name = "CastError") {
-      error = handleCastErrorDB(error);
-    }
-
     sendErrorDev(err, res);
   } else if (process.env.NODE_ENV == "production") {
     let error = { ...err };
 
-    if (error.name = "CastError") {
-      error = handleCastErrorDB(error);
-    }
+    // error occured when trying to handle duplicate fields error
+    if (error.code === 11000) { error = handleDuplicateFieldsDB(); }
+
+    // error when fail db connection or etc reason
+    if (error.name = "CastError") { error = handleCastErrorDB(error); }
+
+    // validation error occured at the time error handling
+    if (error.name === "ValidatorError") { error = handleValidationError(); }
 
     sendErrorProd(error, res);
   }

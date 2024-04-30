@@ -1,5 +1,12 @@
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
+
+process.on('uncaughtException', err => {
+  console.log('UNHANDLED REJECTION! 🛑 Shutting down...');
+  console.log(err.name, err.message);
+    process.exit(1);
+})
+
 dotenv.config({ path: './config.env' });
 const app = require('./app');
 
@@ -14,45 +21,20 @@ const options = {
 };
 
 mongoose.connect(db).then(() => {
-  console.log('ok DB CONNECTED:');
+  console.log('DB CONNECTED:');
 });
-
-/*-------------------------------------------*/
-
-// const userSchema = new mongoose.Schema({
-//   name: {
-//     type: String,
-//     required: [true, 'User must have a name'],
-//   },
-//   email: {
-//     type: String,
-//     required: [true, 'User must have a email'],
-//   },
-//   contact: Number,
-//   location: String,
-//   gender: String,
-// });
-
-// const UserModel = mongoose.model('Swapnil', userSchema);
-
-// const userData = new UserModel({
-//   name: 'Swapnil w',
-//   email: 'sww@swapnil.com',
-//   contact: 965487654321,
-//   location: 'sangamner',
-//   gender: 'male',
-// });
-
-// userData
-//   .save()
-//   .then((result) => {
-//     console.log('ok result:', result);
-//   })
-//   .catch((err) => {
-//     console.log('ok error:', err);
-//   });
 
 const port = process.env.PORT || 8080;
-app.listen(port, () => {
+const server = app.listen(port, () => {
   console.log('App is listening on port:', port);
 });
+
+process.on('unhandledRejection', err => {
+  console.log(err.name, err.message);
+  console.log('UNHANDLED REJECTION! 🛑 Shutting down...');
+  server.close(() => {
+    process.exit(1);
+  })
+})
+
+// console.log(x);

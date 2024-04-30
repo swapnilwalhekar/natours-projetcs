@@ -30,11 +30,11 @@ app.all('*', (req, res, next) => {
   // err.status = 'failed';
   // next(err);
 
-  // 2) Error class created
+  // 2) Global Error class created
   next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
 })
 
 // global error handling
 app.use(globalErrorHandler);
-
+ 
 module.exports = app;
