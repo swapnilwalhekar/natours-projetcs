@@ -1,6 +1,12 @@
-const getAllUsers = (req, res) => {
+const User = require('../models/userModel')
+
+const getAllUsers = async(req, res) => {
+  const users = await User.find();;
+
   res.status(200).json({
-    message: 'getAllUsers ROUTE IS NOT CREATED',
+    status: 'success',
+    message: 'All user list is here',
+    users
   });
 };
 

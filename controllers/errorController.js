@@ -9,7 +9,7 @@ const handleDuplicateFieldsDB = () => {
 }
 
 const handleValidationError = (err) => {
-  return new AppError(`${err}`, 200);
+  return new AppError(`${err}`, 400);
 }
 
 const sendErrorDev = (err, res) => {
