@@ -12,6 +12,14 @@ const handleValidationError = (err) => {
   return new AppError(`${err}`, 400);
 }
 
+const handleJWTError = () => {
+  return new AppError(`Inavalid token. Please login again`, 401);
+}
+
+const handleJWTExpiredError = () => {
+  return new AppError(`Token Expired. Please login again`, 401);
+}
+
 const sendErrorDev = (err, res) => {
   res.status(err.statusCode).json({
     status: err.status,
@@ -59,6 +67,10 @@ const globalErrorHandler = (err, req, res, next) => {
 
     // validation error occured at the time error handling
     if (error.name === "ValidatorError") { error = handleValidationError(); }
+
+    if (error.name === "JsonWebTokenError") { error = handleJWTError() }
+
+    if (error.name === "TokenExpiredError") { error = handleJWTExpiredError() }
 
     sendErrorProd(error, res);
   }

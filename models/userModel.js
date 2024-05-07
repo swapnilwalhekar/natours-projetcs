@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
 
 const userSchema = new mongoose.Schema({
     name: {
@@ -16,6 +15,11 @@ const userSchema = new mongoose.Schema({
         validate: [validator.isEmail, 'Please provide a valid email']
     },
     photo: String,
+    role: {
+        type: String,
+        enum: ['user', 'guide', 'user-guide', 'admin'],
+        default: 'user'
+    },
     password: {
         type: String,
         required: [true, 'Please provide a password'],
@@ -33,7 +37,8 @@ const userSchema = new mongoose.Schema({
             },
             message: "Passwords are not the same!"
         }
-    }
+    },
+    passwordChangedAt: Date
 })
 
 userSchema.pre('save', async function (next) {
@@ -50,6 +55,16 @@ userSchema.pre('save', async function (next) {
 // Instance method is available on all documents of certain collection
 userSchema.methods.correctPassword = async function (candidataPassword, userPassword) {
     return await bcrypt.compare(candidataPassword, userPassword)
+}
+
+userSchema.methods.changedPasswordAfter = function (JWTTimeStamp) {
+    if (this.passwordChangedAt) {
+        const changedTimestamp = parseInt(this.passwordChangedAt.getTime() / 1000, 10);
+
+        return JWTTimeStamp < changedTimestamp;  // true means password changed
+    }
+
+    return false; // False means password not changed
 }
 
 const userModel = mongoose.model('User', userSchema);
